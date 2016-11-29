@@ -2,7 +2,7 @@ function elem = meshgen(boxmin,boxmax,step,dims,folder)
 
     xDim = dims(1)-1;
     yDim = dims(2)-1;
-    zDim = dims(3)-1;
+    zDim = dims(3)-1;  
        
 %     % get step size and boundaries for the mesh
 %     step   = zeros(1,3);
@@ -84,16 +84,6 @@ function elem = meshgen(boxmin,boxmax,step,dims,folder)
     lin = 9;
     fmt = [repmat('%d, ',1,lin-1) '%d\n'];
     
-%     if facesOnly
-%         %% node sets for faces   
-%         fprintf(inpFile,'**\n**\t--- NODE SETS FOR FACES ---\n');
-%         for ii = 1:3
-%             fprintf(inpFile,'\n**\n*Nset, nset=f_n-%d\n',ii);
-%             fprintf(inpFile,fmt,nodes(nodes(:,ii+1)==boxmin(ii))');
-%             fprintf(inpFile,'\n**\n*Nset, nset=f_n+%d\n',ii);
-%             fprintf(inpFile,fmt,nodes(nodes(:,ii+1)==boxmax(ii))');
-%         end
-%    end
     %% node sets for faces    
     fprintf(inpFile,'**\n**\t--- NODE SETS FOR FACES ---\n');
     ind = (1:3)';
@@ -104,15 +94,18 @@ function elem = meshgen(boxmin,boxmax,step,dims,folder)
                     nodes(:,ind(2)+1) ~= boxmax(ind(2)) &...
                     nodes(:,ind(3)+1) ~= boxmin(ind(3)) &...
                     nodes(:,ind(3)+1) ~= boxmax(ind(3));
-            fprintf(inpFile,'**\n*Nset, nset=f_n%s%d\n',sign(jj),ii);
-            fprintf(inpFile,fmt,nodes(condi)');
+            if isempty(nodes(condi))
+                fprintf('nset=f_n%s%d is empty\n',sign(jj),ii)
+            else
+                fprintf(inpFile,'**\n*Nset, nset=f_n%s%d\n',sign(jj),ii);
+                fprintf(inpFile,fmt,nodes(condi)');
+            end
             if rem(size(nodes(condi),1),lin)~=0
                 fprintf(inpFile,'\n');
             end
         end     
         ind = circshift(ind,-1);
     end
-
     % node sets for edges
     fprintf(inpFile,'**\n**\t--- NODE SETS FOR EDGES ---\n');
     ind = (1:3)';
@@ -123,15 +116,21 @@ function elem = meshgen(boxmin,boxmax,step,dims,folder)
                     nodes(:,ind(2)+1) == bnd(ind(1),vind2(jj,2)) &...
                     nodes(:,ind(3)+1) ~= boxmin(ind(3)) &...
                     nodes(:,ind(3)+1) ~= boxmax(ind(3));
-            fprintf(inpFile,'**\n*Nset, nset=e_n%s%d_n%s%d\n',...
-                sign(vind2(jj,1)),ind(1),sign(vind2(jj,2)),ind(2));
-            fprintf(inpFile,fmt,nodes(condi)');
+            if isempty(nodes(condi))
+                fprintf('nset=e_n%s%d_n%s%d is empty\n',...
+                    sign(vind2(jj,1)),ind(1),sign(vind2(jj,2)),ind(2))
+            else
+                fprintf(inpFile,'**\n*Nset, nset=e_n%s%d_n%s%d\n',...
+                    sign(vind2(jj,1)),ind(1),sign(vind2(jj,2)),ind(2));
+                fprintf(inpFile,fmt,nodes(condi)');
+            end
             if rem(size(nodes(condi),1),lin)~=0
                 fprintf(inpFile,'\n');
             end
         end   
         ind = circshift(ind,-1);
     end  
+        
     %% node sets for vertices
     fprintf(inpFile,'**\n**\t--- NODE SETS FOR VERTICES ---\n');
     vind = permn([1,2],3);
